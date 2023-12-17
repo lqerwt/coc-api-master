@@ -12,8 +12,12 @@
             <result property="requestParams" column="request_params" jdbcType="VARCHAR"/>
             <result property="requestHeader" column="request_header" jdbcType="VARCHAR"/>
             <result property="responseHeader" column="response_header" jdbcType="VARCHAR"/>
+            <result property="requestExample" column="request_example" jdbcType="VARCHAR"/>
+            <result property="reduceScore" column="reduce_score" jdbcType="BIGINT"/>
             <result property="status" column="status" jdbcType="INTEGER"/>
             <result property="method" column="method" jdbcType="VARCHAR"/>
+            <result property="totalNum" column="total_num" jdbcType="BIGINT"/>
+            <result property="avatarUrl" column="avatar_url" jdbcType="VARCHAR"/>
             <result property="userId" column="user_id" jdbcType="BIGINT"/>
             <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
             <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
@@ -22,8 +26,10 @@
 
     <sql id="Base_Column_List">
         id,name,description,
-        url,requestParams,requestHeader,responseHeader,
-        status,method,userId,
-        createTime,updateTime,isDelete
+        url,request_params,request_header,
+        response_header,request_example,reduce_score,
+        status,method,total_num,
+        avatar_url,user_id,create_time,
+        update_time,is_delete
     </sql>
 </mapper>

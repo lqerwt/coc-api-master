@@ -33,4 +33,6 @@ dubbo:
     name: dubbo
     port: -1
   registry:
-    address: zookeeper://127.0.0.1:2181
+    #内置zookeeper配置 address: zookeeper://127.0.0.1:2181
+    address: nacos://localhost:8848
+

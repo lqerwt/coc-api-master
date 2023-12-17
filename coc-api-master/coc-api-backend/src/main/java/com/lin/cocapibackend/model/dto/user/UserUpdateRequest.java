@@ -6,11 +6,11 @@ import lombok.Data;
 /**
  * 用户更新请求
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author lin
  */
 @Data
 public class UserUpdateRequest implements Serializable {
+
     /**
      * id
      */
@@ -22,19 +22,40 @@ public class UserUpdateRequest implements Serializable {
     private String userName;
 
     /**
+     * 账号
+     */
+    private String userAccount;
+
+    /**
+     * 密码
+     */
+    private String userPassword;
+
+    /**
      * 用户头像
      */
     private String userAvatar;
 
     /**
-     * 简介
+     * 性别
      */
-    private String userProfile;
+    private String gender;
 
     /**
-     * 用户角色：user/admin/ban
+     * 账号状态（0- 正常 1- 封号）
+     */
+    private Integer status;
+
+    /**
+     * 用户角色：user/admin
      */
     private String userRole;
+
+    /**
+     * 钱包余额,注册送30币
+     */
+    private Long wallet;
+
 
     private static final long serialVersionUID = 1L;
 }

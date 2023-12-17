@@ -19,7 +19,7 @@ spring:
   # todo 需替换配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/coc-api
+    url: jdbc:mysql://localhost:3306/coc_api
     username: root
     password: root
   # Redis 配置
@@ -84,10 +84,10 @@ wx:
 # todo 需替换配置
 cos:
   client:
-    accessKey: xxx
-    secretKey: xxx
-    region: xxx
-    bucket: xxx
+    accessKey: AKIDa1ENROEtSr31oV0LSQJ1HRRJwX7Vjsys
+    secretKey: tcCakgCZpvpX0KbiePxRjpjPvIitytgQ
+    region: ap-nanjing
+    bucket: cocapi-1322271980
 
 # 这段配置仅供测试，实际应该根据登录用户获取对应的ak、sk
 cocapi:
@@ -102,5 +102,5 @@ dubbo:
     name: dubbo
     port: -1
   registry:
-#    address: zookeeper://${zookeeper.address:127.0.0.1}:2181
-    address: zookeeper://127.0.0.1:2181
+    #内置zookeeper配置 address: zookeeper://127.0.0.1:2181
+    address: nacos://localhost:8848

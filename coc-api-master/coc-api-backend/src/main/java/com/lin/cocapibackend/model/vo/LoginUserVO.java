@@ -7,14 +7,13 @@ import lombok.Data;
 /**
  * 已登录用户视图（脱敏）
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author lin
  **/
 @Data
 public class LoginUserVO implements Serializable {
 
     /**
-     * 用户 id
+     * id
      */
     private Long id;
 
@@ -29,6 +28,11 @@ public class LoginUserVO implements Serializable {
     private String userAvatar;
 
     /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
      * 用户简介
      */
     private String userProfile;
@@ -39,14 +43,29 @@ public class LoginUserVO implements Serializable {
     private String userRole;
 
     /**
+     * 钱包余额,注册送30币
+     */
+    private Long wallet;
+
+    /**
+     * 签名标识
+     */
+    private String accessKey;
+
+    /**
+     * 签名密钥
+     */
+    private String secretKey;
+
+    /**
+     * 账号状态（0- 正常 1- 封号）
+     */
+    private Integer userStatus;
+
+    /**
      * 创建时间
      */
     private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
 
     private static final long serialVersionUID = 1L;
 }

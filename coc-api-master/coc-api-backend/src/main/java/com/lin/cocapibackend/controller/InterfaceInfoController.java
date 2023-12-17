@@ -1,8 +1,10 @@
 package com.lin.cocapibackend.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.google.gson.Gson;
+import com.lin.cocapibackend.model.dto.interfaceinfo.*;
 import com.lin.cocapicommon.model.entity.InterfaceInfo;
 import com.lin.cocapicommon.model.entity.User;
 import com.lin.cocclientsdk.client.CocApiClient;
@@ -13,15 +15,11 @@ import com.lin.cocapibackend.constant.UserConstant;
 import com.lin.cocapibackend.exception.BusinessException;
 import com.lin.cocapibackend.exception.ThrowUtils;
 
-import com.lin.cocapibackend.model.dto.interfaceinfo.InterfaceInfoAddRequest;
-import com.lin.cocapibackend.model.dto.interfaceinfo.InterfaceInfoInvokeRequest;
-import com.lin.cocapibackend.model.dto.interfaceinfo.InterfaceInfoQueryRequest;
-import com.lin.cocapibackend.model.dto.interfaceinfo.InterfaceInfoUpdateRequest;
-
 import com.lin.cocapibackend.model.enums.InterfaceInfoStatusEnum;
 import com.lin.cocapibackend.service.InterfaceInfoService;
 import com.lin.cocapibackend.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 接口信息管理
@@ -149,7 +148,7 @@ public class InterfaceInfoController {
      * @param interfaceInfoQueryRequest
      * @return
      */
-    @AuthCheck(mustRole = "admin")
+    @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @GetMapping("/list")
     public BaseResponse<List<InterfaceInfo>> listInterfaceInfo(InterfaceInfoQueryRequest interfaceInfoQueryRequest){
         InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
@@ -168,8 +167,8 @@ public class InterfaceInfoController {
      * @param request
      * @return
      */
-    @PostMapping("/list/page")
-    public BaseResponse<Page<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest,
+    @GetMapping("/list/page")
+    public BaseResponse<IPage<InterfaceInfo>> listInterfaceInfoByPage(InterfaceInfoQueryRequest interfaceInfoQueryRequest,
             HttpServletRequest request) {
         if (interfaceInfoQueryRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
@@ -182,17 +181,32 @@ public class InterfaceInfoController {
         String sortField = interfaceInfoQueryRequest.getSortField();
         String sortOrder = interfaceInfoQueryRequest.getSortOrder();
 
-        String description = interfaceInfoQueryRequest.getDescription();
         // description 需支持模糊搜索
         interfaceInfoQuery.setDescription(null);
+        String name = interfaceInfoQueryRequest.getName();
+        String description = interfaceInfoQueryRequest.getDescription();
+        String url = interfaceInfoQueryRequest.getUrl();
+        Long reduceScore = interfaceInfoQueryRequest.getReduceScore();
+        String requestParams = interfaceInfoQueryRequest.getRequestParams();
+        Integer status = interfaceInfoQueryRequest.getStatus();
+        String method = interfaceInfoQueryRequest.getMethod();
 
         // 限制爬虫
-        ThrowUtils.throwIf(size > 20, ErrorCode.PARAMS_ERROR);
+        ThrowUtils.throwIf(size > 50, ErrorCode.PARAMS_ERROR);
 
-        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>(interfaceInfoQuery);
-        queryWrapper.like((StringUtils.isNotBlank(description)), "description", description);
+        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like(StringUtils.isNotBlank(name), "name", name)
+                .like(StringUtils.isNotBlank(description), "description", description)
+                .like(StringUtils.isNotBlank(url), "url", url)
+                .eq(StringUtils.isNotBlank(method), "method", method)
+                .eq(ObjectUtils.isNotEmpty(status), "status", status)
+                .eq(ObjectUtils.isNotEmpty(reduceScore), "reduce_score", reduceScore);
+
         queryWrapper.orderBy(StringUtils.isNotBlank(sortField),
                 sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
+
+//        IPage<InterfaceInfo> page = new Page<>(current, size);
+//        IPage<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(page);
 
         Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size),
                 queryWrapper);
@@ -200,6 +214,41 @@ public class InterfaceInfoController {
     }
 
     // endregion
+
+    /**
+     *
+     * @param interfaceInfoQueryRequest 接口信息查询请求
+     * @param request   请求
+     * @return
+     */
+    @GetMapping("/get/searchText")
+    public BaseResponse<Page<InterfaceInfo>> listInterfaceInfoBySearchTextPage(InterfaceInfoSearchTextRequest interfaceInfoQueryRequest, HttpServletRequest request) {
+        if (interfaceInfoQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
+        InterfaceInfo interfaceInfoQuery = new InterfaceInfo();
+        BeanUtils.copyProperties(interfaceInfoQueryRequest, interfaceInfoQuery);
+
+        String searchText = interfaceInfoQueryRequest.getSearchText();
+        long size = interfaceInfoQueryRequest.getPageSize();
+        long current = interfaceInfoQueryRequest.getCurrent();
+        String sortField = interfaceInfoQueryRequest.getSortField();
+        String sortOrder = interfaceInfoQueryRequest.getSortOrder();
+
+        QueryWrapper<InterfaceInfo> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like(StringUtils.isNotBlank(searchText), "name", searchText)
+                .or()
+                .like(StringUtils.isNotBlank(searchText), "description", searchText);
+        queryWrapper.orderBy(StringUtils.isNotBlank(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC), sortField);
+        Page<InterfaceInfo> interfaceInfoPage = interfaceInfoService.page(new Page<>(current, size), queryWrapper);
+        // 不是管理员只能查看已经上线的
+        if (!userService.isAdmin(request)) {
+            List<InterfaceInfo> interfaceInfoList = interfaceInfoPage.getRecords().stream()
+                    .filter(interfaceInfo -> interfaceInfo.getStatus().equals(InterfaceInfoStatusEnum.ONLINE.getValue())).collect(Collectors.toList());
+            interfaceInfoPage.setRecords(interfaceInfoList);
+        }
+        return ResultUtils.success(interfaceInfoPage);
+    }
 
     /**
      * 发布（仅管理员）
@@ -216,24 +265,21 @@ public class InterfaceInfoController {
         }
         //判断是否存在
         Long id = idRequest.getId();
-        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
-        if (oldInterfaceInfo == null){
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if (interfaceInfo == null){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
+
         // 判断该接口是否可以调用
-        com.lin.cocclientsdk.model.User user = new com.lin.cocclientsdk.model.User();
-        user.setUsername("test");
-        String username = cocApiClient.getUsernameByPost(user);
-        if (StringUtils.isBlank(username)){
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口调用失败");
-        }
+//        com.lin.cocclientsdk.model.User user = new com.lin.cocclientsdk.model.User();
+//        user.setUsername("test");
+//        String username = cocApiClient.getUsernameByPost(user);
+//        if (StringUtils.isBlank(username)){
+//            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "接口调用失败");
+//        }
         // 仅本人或管理员可修改
-        InterfaceInfo interfaceInfo = new InterfaceInfo();
-        interfaceInfo.setId(id);
+
         interfaceInfo.setStatus(InterfaceInfoStatusEnum.ONLINE.getValue());
-
-
-        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(result);
     }
@@ -252,18 +298,11 @@ public class InterfaceInfoController {
 
         //判断是否存在
         Long id = idRequest.getId();
-        InterfaceInfo oldInterfaceInfo = interfaceInfoService.getById(id);
-        if (oldInterfaceInfo == null){
+        InterfaceInfo interfaceInfo = interfaceInfoService.getById(id);
+        if (interfaceInfo == null){
             throw new BusinessException(ErrorCode.NOT_FOUND_ERROR);
         }
-
-        // 仅本人或管理员可修改
-        InterfaceInfo interfaceInfo = new InterfaceInfo();
-        interfaceInfo.setId(id);
         interfaceInfo.setStatus(InterfaceInfoStatusEnum.OFFLINE.getValue());
-
-
-        ThrowUtils.throwIf(oldInterfaceInfo == null, ErrorCode.NOT_FOUND_ERROR);
         boolean result = interfaceInfoService.updateById(interfaceInfo);
         return ResultUtils.success(result);
     }

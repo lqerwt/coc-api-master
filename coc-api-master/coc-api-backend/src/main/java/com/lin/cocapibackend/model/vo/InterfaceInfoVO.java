@@ -17,7 +17,7 @@ public class InterfaceInfoVO extends InterfaceInfo implements Serializable {
     /**
      * 调用次数
      */
-    private Integer totalNum;
+    private Long totalNum;
 
     private static final long serialVersionUID = 1L;
 }

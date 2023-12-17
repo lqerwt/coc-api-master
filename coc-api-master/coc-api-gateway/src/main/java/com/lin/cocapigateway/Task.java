@@ -1,6 +1,5 @@
 package com.lin.cocapigateway;
 
-//import org.apache.dubbo.config.annotation.DubboReference;
 import com.lin.cocapibackend.provider.DemoService;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;

@@ -22,29 +22,19 @@ public class User implements Serializable {
     private Long id;
 
     /**
-     * 用户账号
+     * 用户昵称
+     */
+    private String userName;
+
+    /**
+     * 账号
      */
     private String userAccount;
 
     /**
-     * 用户密码
+     * 密码
      */
     private String userPassword;
-
-    /**
-     * 开放平台id
-     */
-    private String unionId;
-
-    /**
-     * 公众号openId
-     */
-    private String mpOpenId;
-
-    /**
-     * 用户昵称
-     */
-    private String userName;
 
     /**
      * 用户头像
@@ -52,25 +42,44 @@ public class User implements Serializable {
     private String userAvatar;
 
     /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 性别 0-男 1-女
+     */
+    private String gender;
+
+    /**
      * 用户简介
      */
     private String userProfile;
 
     /**
-     * 用户角色：user/admin/ban
+     * 用户角色：user/admin
      */
     private String userRole;
 
     /**
-     * 签名 accessKey
+     * 钱包余额,注册送30币
+     */
+    private Long wallet;
+
+    /**
+     * 签名标识
      */
     private String accessKey;
 
     /**
-     * 签名 secretKey
+     * 签名密钥
      */
     private String secretKey;
 
+    /**
+     * 账号状态（0- 正常 1- 封号）
+     */
+    private Integer userStatus;
 
     /**
      * 创建时间

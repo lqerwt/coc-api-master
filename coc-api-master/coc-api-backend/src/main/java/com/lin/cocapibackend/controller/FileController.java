@@ -1,6 +1,9 @@
 package com.lin.cocapibackend.controller;
 
 import cn.hutool.core.io.FileUtil;
+import com.lin.cocapibackend.model.enums.ImageStatusEnum;
+import com.lin.cocapibackend.model.vo.ImageVo;
+import com.lin.cocapibackend.model.vo.UserVO;
 import com.lin.cocapicommon.model.entity.User;
 import com.lin.cocapibackend.common.BaseResponse;
 import com.lin.cocapibackend.common.ErrorCode;
@@ -26,8 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 /**
  * 文件接口
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author lin
  */
 @RestController
 @RequestMapping("/file")
@@ -49,27 +51,38 @@ public class FileController {
      * @return
      */
     @PostMapping("/upload")
-    public BaseResponse<String> uploadFile(@RequestPart("file") MultipartFile multipartFile,
-            UploadFileRequest uploadFileRequest, HttpServletRequest request) {
+    public BaseResponse<ImageVo> uploadFile(@RequestPart("file") MultipartFile multipartFile,
+                                            UploadFileRequest uploadFileRequest, HttpServletRequest request) {
         String biz = uploadFileRequest.getBiz();
         FileUploadBizEnum fileUploadBizEnum = FileUploadBizEnum.getEnumByValue(biz);
+        ImageVo imageVo = new ImageVo();
         if (fileUploadBizEnum == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         validFile(multipartFile, fileUploadBizEnum);
+        String result = validFile(multipartFile, fileUploadBizEnum);
+        if (!"success".equals(result)) {
+            return uploadError(imageVo, multipartFile, result);
+        }
+
         User loginUser = userService.getLoginUser(request);
         // 文件目录：根据业务、用户来划分
         String uuid = RandomStringUtils.randomAlphanumeric(8);
         String filename = uuid + "-" + multipartFile.getOriginalFilename();
         String filepath = String.format("/%s/%s/%s", fileUploadBizEnum.getValue(), loginUser.getId(), filename);
         File file = null;
+
         try {
             // 上传文件
             file = File.createTempFile(filepath, null);
             multipartFile.transferTo(file);
             cosManager.putObject(filepath, file);
+            imageVo.setName(multipartFile.getOriginalFilename());
+            imageVo.setUid(RandomStringUtils.randomAlphanumeric(8));
+            imageVo.setStatus(ImageStatusEnum.SUCCESS.getValue());
+            imageVo.setUrl(FileConstant.COS_HOST + filepath);
             // 返回可访问地址
-            return ResultUtils.success(FileConstant.COS_HOST + filepath);
+            return ResultUtils.success(imageVo);
         } catch (Exception e) {
             log.error("file upload error, filepath = " + filepath, e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "上传失败");
@@ -84,13 +97,21 @@ public class FileController {
         }
     }
 
+
+    private BaseResponse<ImageVo> uploadError(ImageVo imageVo, MultipartFile multipartFile, String message) {
+        imageVo.setName(multipartFile.getOriginalFilename());
+        imageVo.setUid(RandomStringUtils.randomAlphanumeric(8));
+        imageVo.setStatus(ImageStatusEnum.ERROR.getValue());
+        return ResultUtils.error(imageVo, ErrorCode.OPERATION_ERROR, message);
+    }
+
     /**
      * 校验文件
      *
-     * @param multipartFile
+     * @param multipartFile     多部份文件
      * @param fileUploadBizEnum 业务类型
      */
-    private void validFile(MultipartFile multipartFile, FileUploadBizEnum fileUploadBizEnum) {
+    private String validFile(MultipartFile multipartFile, FileUploadBizEnum fileUploadBizEnum) {
         // 文件大小
         long fileSize = multipartFile.getSize();
         // 文件后缀
@@ -98,11 +119,12 @@ public class FileController {
         final long ONE_M = 1024 * 1024L;
         if (FileUploadBizEnum.USER_AVATAR.equals(fileUploadBizEnum)) {
             if (fileSize > ONE_M) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件大小不能超过 1M");
+                return "文件大小不能超过 1M";
             }
-            if (!Arrays.asList("jpeg", "jpg", "svg", "png", "webp").contains(fileSuffix)) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "文件类型错误");
+            if (!Arrays.asList("jpeg", "jpg", "svg", "png", "webp","jiff").contains(fileSuffix)) {
+                return "文件类型错误";
             }
         }
+        return "success";
     }
 }

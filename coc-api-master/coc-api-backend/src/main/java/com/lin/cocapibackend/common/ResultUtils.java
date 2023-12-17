@@ -1,10 +1,11 @@
 package com.lin.cocapibackend.common;
 
+import com.lin.cocapibackend.model.vo.ImageVo;
+
 /**
  * 返回工具类
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author lin
  */
 public class ResultUtils {
 
@@ -49,4 +50,16 @@ public class ResultUtils {
     public static BaseResponse error(ErrorCode errorCode, String message) {
         return new BaseResponse(errorCode.getCode(), null, message);
     }
+
+    /**
+     * 失败
+     * @param data
+     * @param errorCode
+     * @param message
+     * @return
+     */
+    public static <T> BaseResponse<T> error(T data, ErrorCode errorCode, String message) {
+        return new BaseResponse<>(errorCode.getCode(), data, message);
+    }
+
 }

@@ -14,10 +14,6 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class InterfaceInfoQueryRequest extends PageRequest implements Serializable {
-    /**
-     * 主键
-     */
-    private Long id;
 
     /**
      * 接口名称
@@ -35,19 +31,14 @@ public class InterfaceInfoQueryRequest extends PageRequest implements Serializab
     private String url;
 
     /**
+     * 扣除积分数
+     */
+    private Long reduceScore;
+
+    /**
      * 请求参数
      */
     private String requestParams;
-
-    /**
-     * 请求头
-     */
-    private String requestHeader;
-
-    /**
-     * 响应头
-     */
-    private String responseHeader;
 
     /**
      * 接口状态(0-关闭，1-开启)

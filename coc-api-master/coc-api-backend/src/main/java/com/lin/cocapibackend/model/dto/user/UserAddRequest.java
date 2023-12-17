@@ -6,8 +6,7 @@ import lombok.Data;
 /**
  * 用户创建请求
  *
- * @author <a href="https://github.com/liyupi">程序员鱼皮</a>
- * @from <a href="https://yupi.icu">编程导航知识星球</a>
+ * @author lin
  */
 @Data
 public class UserAddRequest implements Serializable {
@@ -23,6 +22,16 @@ public class UserAddRequest implements Serializable {
     private String userAccount;
 
     /**
+     * 密码
+     */
+    private String userPassword;
+
+    /**
+     * 性别 0-男 1-女
+     */
+    private String gender;
+
+    /**
      * 用户头像
      */
     private String userAvatar;
@@ -31,6 +40,11 @@ public class UserAddRequest implements Serializable {
      * 用户角色: user, admin
      */
     private String userRole;
+
+    /**
+     * 钱包余额,注册送30币
+     */
+    private Long wallet;
 
     private static final long serialVersionUID = 1L;
 }
